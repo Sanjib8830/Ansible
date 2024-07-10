@@ -32,11 +32,15 @@
      shell: |
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-   - name: Install Docker
+   - name: Install Docker and Docker Tools
      apt:
-       name:
-        - docker.ce
-       state: present
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
 
    - name: Verify Docker
      systemd:
@@ -67,8 +71,9 @@
      command: minikube-linux-amd64 /usr/local/bin/minikube 
 
    - name: Remove temp directory
-     file: usr/local/bin/minikube
-     state: absent
+     file: 
+        path: usr/local/bin/minikube
+        state: absent
 
    - name: Verify Minikube installation
      command: minikube version
