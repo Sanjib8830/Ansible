@@ -1,0 +1,56 @@
+---
+- name: Install Apache HTTP Server (httpd)
+  hosts: target_servers
+  become: yes  # Enable privilege escalation
+
+  tasks:
+    - name: Update apt package cache (for Debian/Ubuntu) or yum cache (for CentOS)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian' or ansible_os_family == 'Ubuntu'
+
+    - name: Install Apache HTTP Server (httpd) on Debian/Ubuntu
+      package:
+        name: apache2  # Apache HTTP Server package name for Debian/Ubuntu
+        state: present
+      when: ansible_os_family == 'Debian' or ansible_os_family == 'Ubuntu'
+
+    - name: Install Apache HTTP Server (httpd) on RedHat/CentOS
+      package:
+        name: httpd  # Apache HTTP Server package name for RedHat/CentOS
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Download Apache HTTP Server (httpd)
+      get_url:
+        url: "https://dlcdn.apache.org/httpd/httpd-2.4.59.tar.bz2"
+        dest: /opt/httpd-2.4.59.tar.bz2
+        mode: '0644'
+
+    - name: Extract Apache HTTP Server (httpd)
+      unarchive:
+        src: /opt/httpd-2.4.59.tar.bz2
+        dest: /opt
+        remote_src: yes
+        creates: /opt/httpd-2.4.59  # Skip extraction if directory already exists
+
+    - name: Set symbolic link to httpd installation directory
+      file:
+        src: "/opt/httpd-2.4.59"
+        dest: "/opt/httpd"
+        state: link
+
+    - name: Ensure httpd service is started and enabled on Debian/Ubuntu
+      systemd:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_os_family == 'Debian' or ansible_os_family == 'Ubuntu'
+
+    - name: Ensure httpd service is started and enabled on RedHat/CentOS
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_os_family == 'RedHat'
+

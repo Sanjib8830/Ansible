@@ -1,0 +1,84 @@
+---
+  - name: Post-installation setup for Linux
+    hosts: pflex_vm
+    become: yes
+    tasks:
+      - name: Ensure the latest packages are installed
+        yum:
+          name: "*"
+          state: latest
+
+      - name: Configure static IP address
+        lineinfile:
+          path: /etc/sysconfig/network-scripts/ifcfg-eth0
+          regexp: '^.*IPADDR.*'
+          line: |
+              DEVICE=eth0
+              BOOTPROTO=none
+              ONBOOT=yes
+              IPADDR=192.168.1.10
+              NETMASK=255.255.255.0
+              GATEWAY=192.168.1.1
+              DNS1=8.8.8.8
+        notify:
+          - Restart network
+
+      - name: Set up firewall rules
+        firewalld:
+          service: ssh
+          permanent: yes
+          state: enabled
+
+      - name: Reload firewall
+        firewalld:
+          state: reloaded
+
+      - name: Add a new user
+        user:
+          name: newuser
+          password: "{{ 'StrongPassword123' | password_hash('sha512') }}"
+          state: present
+          shell: /bin/bash
+
+      - name: Install essential packages
+        yum:
+          name:
+            - git
+            - curl
+            - vim
+            - htop
+            - ntp
+            - sysstat
+          state: present
+
+      - name: Enable and start SSH service
+        service:
+          name: sshd
+          state: started
+          enabled: yes
+
+      - name: Ensure NTP is running
+        service:
+          name: ntpd
+          state: started
+          enabled: yes
+
+      - name: Ensure sysstat is running
+        service:
+          name: sysstat
+          state: started
+          enabled: yes
+
+      - name: Set up a cron job for system updates
+        cron:
+          name: "Run updates"
+          minute: "0"
+          hour: "2"
+          job: "/usr/bin/yum update -y"
+
+    handlers:
+      - name: Restart network
+        service:
+          name: network
+          state: restarted
+

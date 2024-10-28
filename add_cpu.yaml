@@ -1,0 +1,69 @@
+---
+- name: VM Disk Playbook
+  hosts: pflex_vm
+  become: false
+  gather_facts: false
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  collections:
+    - community.vmware
+
+  pre_tasks:
+    - include_vars: /home/admin/Ansible/Playbooks/var_cpu.yaml
+
+  tasks:
+    - name: Get VM hardware information
+      community.vmware.vmware_guest_info:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ vm_name }}"
+      register: vm_info
+
+    - name: Debug VM Info
+      debug:
+        var: vm_info
+
+    - name: Stop virtual machine if necessary
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        name: "{{ vm_name }}"
+        state: powered-off
+        timeout: 600  # Increase timeout to 600 seconds (adjust as needed)
+      when: vm_info.instance.hw_memtotal_mb != memory or 
+        vm_info.instance.hw_processor_count != cpu
+      register: power_off_result
+      failed_when: power_off_result is failed
+
+    - name: Reconfigure CPU and RAM of VM
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        cluster: "{{ vcenter_cluster }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ vm_name }}"
+        hardware:
+          memory_mb: "{{ memory }}"
+          num_cpus: "{{ cpu }}"
+          scsi: "lsilogic"
+      when: vm_info.instance.hw_memtotal_mb != memory or 
+            vm_info.instance.hw_processor_count != cpu
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        name: "{{ vm_name }}"
+        state: powered-on
+      when: vm_info.instance.hw_memtotal_mb != memory or 
+            vm_info.instance.hw_processor_count != cpu
+

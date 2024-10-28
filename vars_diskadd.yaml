@@ -1,0 +1,14 @@
+---
+vcenter_hostname: "galaxyvc.galaxyho.com"
+vcenter_validate_certs: false
+vcenter_username: "administrator@vsphere.local"
+vcenter_password: "Dellsvcs1!"
+vm_name: "ansible-2"
+vm_disk_gb: 1
+vm_disk_type: "thin"
+vm_disk_datastore: "Vol1"
+vm_disk_scsi_controller: 1
+vm_disk_scsi_unit: 1
+vm_disk_scsi_type: 'lsilogic'
+vm_disk_mode: 'persistent'
+vcenter_datacenter: "Galaxy-DC"

@@ -1,0 +1,68 @@
+---
+- name: VM Disk Playbook
+  hosts: pflex_vm
+  become: false
+  gather_facts: false
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  collections:
+    - community.vmware
+
+  pre_tasks:
+    - include_vars: /home/admin/Ansible/Playbooks/var_cpu.yaml
+
+  tasks:
+    - name: Stop virtual machine
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        cluster: "{{ vcenter_cluster }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ vm_name }}"
+        state: poweredoff
+      register: stop_vm
+
+    - name: Wait for VM to power off
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        name: "{{ vm_name }}"
+        state: poweredoff
+      register: poweroff_check
+      until: poweroff_check.powered_off
+      retries: 10  # Adjust this as needed
+      delay: 5  # Wait time between retries
+
+    - name: Debug VM power-off state
+      debug:
+        var: poweroff_check
+
+    - name: Reconfigure CPU and RAM of VM
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        cluster: "{{ vcenter_cluster }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ vm_name }}"
+        validate_certs: false
+        hardware:
+          memory_mb: "{{ memory }}"
+          num_cpus: "{{ cpu }}"
+          scsi: "lsilogic"
+
+    - name: Power on virtual machine
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: false
+        cluster: "{{ vcenter_cluster }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ vm_name }}"
+        state: poweredon
+
