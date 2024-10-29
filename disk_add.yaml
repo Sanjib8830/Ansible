@@ -1,17 +1,22 @@
 ---
-- name: vm disk Playbook
+- name: VM Disk Addition Playbook
   hosts: pflex_vm
   become: false
   gather_facts: false
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    vars_file_path: "https://raw.githubusercontent.com/Sanjib8830/Ansible/main/vars_diskadd.yaml"  # GitHub path
   collections:
-    - community.vmware
+    - redhat.vmware
+
   pre_tasks:
-    - include_vars: /home/admin/Ansible/Playbooks/vars_diskadd.yaml
-    
+    - name: Load variables for disk addition from GitHub
+      include_vars:
+        url: "{{ vars_file_path }}"
+      tags: always
+
   tasks:
-    - name: add disk to vm
+    - name: Add disk to VM
       vmware_guest_disk:
         hostname: "{{ vcenter_hostname }}"
         username: "{{ vcenter_username }}"
@@ -28,8 +33,22 @@
             unit_number: "{{ vm_disk_scsi_unit }}"
             scsi_type: "{{ vm_disk_scsi_type }}"
             disk_mode: "{{ vm_disk_mode }}"
+      register: disk_addition_result
+      when: vm_name is defined
+      failed_when: "'failed' in disk_addition_result.msg"
+      tags:
+        - disk
 
     - name: Force SCSI subsystem to rescan for new disk
       command: echo "- - -" | tee /sys/class/scsi_host/host*/scan
       become: true
       register: scan_output
+      when: disk_addition_result.changed
+      tags:
+        - scsi-rescan
+
+  post_tasks:
+    - name: Display disk addition status
+      debug:
+        msg: "{{ disk_addition_result }}"
+
