@@ -1,54 +1,28 @@
----
-- name: VM Disk Addition Playbook
-  hosts: pflex_vm
-  become: false
+--
+- name: Hot add CPU and memory to VMs
+  hosts: 10.10.90.82
   gather_facts: false
   vars:
-    ansible_python_interpreter: /usr/bin/python3
-    vars_file_path: "https://raw.githubusercontent.com/Sanjib8830/Ansible/main/vars_diskadd.yaml"  # GitHub path
-  collections:
-    - redhat.vmware
-
-  pre_tasks:
-    - name: Load variables for disk addition from GitHub
-      include_vars:
-        url: "{{ vars_file_path }}"
-      tags: always
-
+    vm_name: "ansible-2"
+    vcenter_hostname: "galaxyvc.galaxyho.com"
+    vcenter_username: "administrator@vsphere.local"
+    vcenter_password: "Dellsvcs1!"
+    vcenter_validate_certs: false
+    memory: 4096  # Memory in MB
+    cpu: 2        # Number of CPUs
   tasks:
-    - name: Add disk to VM
-      vmware_guest_disk:
-        hostname: "{{ vcenter_hostname }}"
-        username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password }}"
-        validate_certs: "{{ vcenter_validate_certs }}"
-        datacenter: "{{ vcenter_datacenter }}"
-        name: "{{ vm_name }}"
-        disk:
-          - size_gb: "{{ vm_disk_gb }}"
-            type: "{{ vm_disk_type }}"
-            datastore: "{{ vm_disk_datastore }}"
-            state: present
-            scsi_controller: "{{ vm_disk_scsi_controller }}"
-            unit_number: "{{ vm_disk_scsi_unit }}"
-            scsi_type: "{{ vm_disk_scsi_type }}"
-            disk_mode: "{{ vm_disk_mode }}"
-      register: disk_addition_result
-      when: vm_name is defined
-      failed_when: "'failed' in disk_addition_result.msg"
-      tags:
-        - disk
 
-    - name: Force SCSI subsystem to rescan for new disk
-      command: echo "- - -" | tee /sys/class/scsi_host/host*/scan
-      become: true
-      register: scan_output
-      when: disk_addition_result.changed
-      tags:
-        - scsi-rescan
-
-  post_tasks:
-    - name: Display disk addition status
-      debug:
-        msg: "{{ disk_addition_result }}"
-
+    - name: Hot add CPU and memory to VMs
+      ansible.builtin.import_role:
+        name: cloud.vmware_ops.provision_vm
+      vars:
+        provision_vm_name: "{{ vm_name }}"
+        provision_vm_hostname: "{{ vcenter_hostname }}"
+        provision_vm_username: "{{ vcenter_username }}"
+        provision_vm_password: "{{ vcenter_password }}"
+        provision_vm_validate_certs: "{{ vcenter_validate_certs }}"
+        provision_vm_hardware:
+          memory_mb: "{{ memory }}"
+          num_cpus: "{{ cpu }}"
+          hotadd_cpu: true
+          hotadd_memory: true
