@@ -1,7 +1,9 @@
 --
 - name: Hot add CPU and memory to VMs
-  hosts: 10.10.90.82
+  hosts: "10.10.90.82"
   gather_facts: false
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python3"
   tasks:
     - name: Hot add CPU and memory to VMs
       ansible.builtin.import_role:
@@ -12,9 +14,6 @@
         provision_vm_username: "{{ vcenter_username }}"
         provision_vm_password: "{{ vcenter_password }}"
         provision_vm_validate_certs: "{{ vcenter_validate_certs }}"
-        provision_vm_folder: "{{ folder }}"
-        provision_vm_datacenter: "{{ datacenter }}"
-        provision_vm_cluster: "{{ cluster }}"
         provision_vm_state: "poweredon"
         provision_vm_hardware:
           memory_mb: "{{ memory }}"
