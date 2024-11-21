@@ -1,6 +1,6 @@
 ---
 - name: Install and start NGINX
-  hosts: target_servers
+  hosts: plex_vm
   become: yes
   tasks:
     - name: Ensure NGINX is installed
