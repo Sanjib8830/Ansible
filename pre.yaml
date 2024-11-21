@@ -1,6 +1,6 @@
 ---
   - name: Post-installation setup for Ubuntu
-    hosts: 10.10.90.82
+    hosts: plex_vm
     become: yes
     tasks:
       - name: Ensure the latest packages are installed
