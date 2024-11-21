@@ -1,6 +1,6 @@
 ---
   - name: Post-installation setup for Ubuntu
-    hosts: pflex_vm
+    hosts: 10.10.90.82
     become: yes
     tasks:
       - name: Ensure the latest packages are installed
