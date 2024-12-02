@@ -3,22 +3,24 @@
   hosts: localhost
   gather_facts: no
   vars_files:
-    - vars_create_vm.yaml  # Include the variable file
+    - vars_create_vm.yaml  # Include the variable file with necessary variables
   collections:
-  - community.vmware
+    - community.vmware
   tasks:
     - name: Create or Manage VM
       community.vmware.vmware_guest:
-        hostname: "{{ provision_vm_hostname }}"
-        username: "{{ provision_vm_username }}"
-        password: "{{ provision_vm_password }}"
-        validate_certs: "{{ provision_vm_validate_certs }}"
-        datacenter: "{{ provision_vm_datacenter }}"
-        cluster: "{{ provision_vm_cluster }}"
-        folder: "{{ provision_vm_folder }}"
-        datastore: "{{ provision_vm_datastore }}"
-        template: "{{ provision_vm_template }}"
-        name: "{{ provision_vm_name }}"
-        state: poweredon
+        hostname: "{{ provision_vm_hostname }}"           # vCenter or ESXi hostname
+        username: "{{ provision_vm_username }}"           # vSphere username
+        password: "{{ provision_vm_password }}"           # vSphere password
+        validate_certs: "{{ provision_vm_validate_certs }}"  # SSL validation
+        datacenter: "{{ provision_vm_datacenter }}"       # vSphere datacenter
+        cluster: "{{ provision_vm_cluster }}"             # Target cluster
+        folder: "{{ provision_vm_folder }}"               # Folder path
+        name: "{{ provision_vm_name }}"                   # VM name
+        template: "{{ provision_vm_template }}"           # Template name
+        datastore: "{{ provision_vm_datastore }}"         # Datastore
+        resource_pool: "{{ provision_vm_resource_pool }}" # Resource pool
+        state: poweredon                                  # Desired state
       delegate_to: localhost
+
 
