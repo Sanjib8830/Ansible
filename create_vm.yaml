@@ -6,7 +6,7 @@
     - vars_create_vm.yaml  # Include the variable file
   tasks:
     - name: Create or Manage VM
-      community.vmware.vmware_guest:
+      community.vmware.vmware_content_deploy_template:
         hostname: "{{ provision_vm_hostname }}"
         username: "{{ provision_vm_username }}"
         password: "{{ provision_vm_password }}"
