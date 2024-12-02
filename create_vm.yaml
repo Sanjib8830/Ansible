@@ -1,6 +1,7 @@
 ---
 - name: Create VM  
   hosts: localhost
+  become: yes
   gather_facts: false
   tasks: 
     - name: Provision a VM from template
