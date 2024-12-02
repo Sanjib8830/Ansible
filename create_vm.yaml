@@ -1,26 +1,24 @@
 ---
-- name: Create a Virtual Machine in vSphere
+- name: Create VM  
   hosts: localhost
-  gather_facts: no
-  vars_files:
-    - vars_create_vm.yaml  # Include the variable file with necessary variables
-  collections:
-    - community.vmware
-  tasks:
-    - name: Create or Manage VM
-      community.vmware.vmware_guest:
-        hostname: "{{ provision_vm_hostname }}"           # vCenter or ESXi hostname
-        username: "{{ provision_vm_username }}"           # vSphere username
-        password: "{{ provision_vm_password }}"           # vSphere password
-        validate_certs: "{{ provision_vm_validate_certs }}"  # SSL validation
-        datacenter: "{{ provision_vm_datacenter }}"       # vSphere datacenter
-        cluster: "{{ provision_vm_cluster }}"             # Target cluster
-        folder: "{{ provision_vm_folder }}"               # Folder path
-        name: "{{ provision_vm_name }}"                   # VM name
-        template: "{{ provision_vm_template }}"           # Template name
-        datastore: "{{ provision_vm_datastore }}"         # Datastore
-        resource_pool: "{{ provision_vm_resource_pool }}" # Resource pool
-        state: poweredon                                  # Desired state
-      delegate_to: localhost
+  gather_facts: false
+  tasks: 
+    - name: Provision a VM from template
+      ansible.builtin.import_role: 
+        name: cloud.vmware_ops.provision_vm
+      vars: 
+        provision_vm_name: "{{ vm_name }}"
+        provision_vm_template: "{{ vm_template }}"
+        provision_vm_hostname: "{{ vcenter_hostname }}"
+        provision_vm_username: "{{ vcenter_username }}"
+        provision_vm_password: "{{ vcenter_password }}"
+        provision_vm_validate_certs: "{{ vcenter_validate_certs }}"
+        provision_vm_folder: "{{ folder }}"
+        provision_vm_datacenter: "{{ datacenter }}"
+        provision_vm_cluster: "{{ cluster }}"
+        provision_vm_state: "poweredon"
+        provision_vm_hardware: 
+            hotadd_cpu: true
+            hotadd_memory: true
 
 
