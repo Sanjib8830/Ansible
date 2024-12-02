@@ -4,9 +4,11 @@
   gather_facts: no
   vars_files:
     - vars_create_vm.yaml  # Include the variable file
+  collections:
+  - community.vmware
   tasks:
     - name: Create or Manage VM
-      community.vmware.vmware_content_deploy_template:
+      community.vmware.vmware_guest:
         hostname: "{{ provision_vm_hostname }}"
         username: "{{ provision_vm_username }}"
         password: "{{ provision_vm_password }}"
