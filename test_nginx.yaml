@@ -1,0 +1,25 @@
+---
+- name: Test nginx
+  hosts: all
+  become: true
+  tasks:
+    - name: Install NGINX
+      ansible.builtin.yum:
+        name: nginx
+        state: present
+
+    - name: Start and enable NGINX service
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Check NGINX service status
+      ansible.builtin.systemd:
+        name: nginx
+        register: nginx_status
+
+    - name: Print NGINX service status
+      ansible.builtin.debug:
+        var: nginx_status
+
