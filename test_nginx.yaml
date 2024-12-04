@@ -1,6 +1,6 @@
 ---
 - name: Test nginx
-  hosts: all
+  hosts: server
   become: true
   tasks:
     - name: Install NGINX
