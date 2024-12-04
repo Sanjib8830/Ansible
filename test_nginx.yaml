@@ -1,29 +1,32 @@
 ---
-- name: Install and start NGINX on RHEL-based systems
-  hosts: server
-  become: true
+- name: Install and configure NGINX
+  hosts: all
+  become: yes
   tasks:
-    - name: Ensure EPEL repository is enabled
-      ansible.builtin.yum:
-        name: epel-release
-        state: present
-
-    - name: Install NGINX
-      ansible.builtin.yum:
+    - name: Install NGINX (default stream)
+      dnf:
         name: nginx
         state: present
 
-    - name: Start and enable NGINX service
-      ansible.builtin.systemd:
+    - name: Enable NGINX module stream (if needed)
+      command: dnf module enable nginx:1.22 -y
+      when: ansible_facts.packages.get('nginx') is not defined
+
+    - name: Open HTTP and HTTPS ports in the firewall
+      firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - http
+        - https
+
+    - name: Reload firewalld to apply changes
+      firewalld:
+        state: reloaded
+
+    - name: Enable NGINX service to start on boot
+      systemd:
         name: nginx
+        enabled: yes
         state: started
-        enabled: true
-
-    - name: Check NGINX service status
-      ansible.builtin.systemd:
-        name: nginx
-        register: nginx_status
-
-    - name: Print NGINX service status
-      ansible.builtin.debug:
-        var: nginx_status
