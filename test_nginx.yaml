@@ -1,8 +1,13 @@
 ---
-- name: Test nginx
+- name: Install and start NGINX on RHEL-based systems
   hosts: server
   become: true
   tasks:
+    - name: Ensure EPEL repository is enabled
+      ansible.builtin.yum:
+        name: epel-release
+        state: present
+
     - name: Install NGINX
       ansible.builtin.yum:
         name: nginx
@@ -22,4 +27,3 @@
     - name: Print NGINX service status
       ansible.builtin.debug:
         var: nginx_status
-
