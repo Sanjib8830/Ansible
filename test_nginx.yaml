@@ -7,11 +7,7 @@
       dnf:
         name: nginx
         state: present
-
-    - name: Enable NGINX module stream (if needed)
-      command: dnf module enable nginx:1.22 -y
-      when: ansible_facts.packages.get('nginx') is not defined
-
+        
     - name: Open HTTP and HTTPS ports in the firewall
       firewalld:
         service: "{{ item }}"
