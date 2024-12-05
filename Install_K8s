@@ -1,6 +1,6 @@
 ---
 - name: Install Minikube
-  host: all
+  host: pflex_vm
   become: yes
 
   tasks:
