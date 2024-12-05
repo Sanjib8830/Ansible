@@ -136,7 +136,7 @@
     
     - name: Add a basic audit config
       ansible.builtin.copy:
-        src: /home/admin/Hardening/audit/audit.rules
+        src: /etc/audit/audit.rules
         dest: /etc/audit/rules.d/audit.rules
         owner: root
         group: root
