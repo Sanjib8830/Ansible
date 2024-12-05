@@ -1,5 +1,5 @@
 - name: Linux hardening
-  hosts: sever
+  hosts: server
   gather_facts: yes
 
   tasks:
