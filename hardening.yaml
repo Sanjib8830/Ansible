@@ -133,7 +133,15 @@
         name: auditd
         state: started
         enabled: yes
-
+    
+    - name: Add a basic audit config
+      ansible.builtin.copy:
+        src: /home/admin/Hardening/audit/audit.rules
+        dest: /etc/audit/rules.d/audit.rules
+        owner: root
+        group: root
+        mode: 0600
+      notify: reboot_host
 
   handlers:
     - name: reboot_host
