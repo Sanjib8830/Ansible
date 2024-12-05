@@ -1,6 +1,6 @@
 --
 - name: Hot add CPU and memory to VMs
-  hosts: plex_vm
+  hosts: pflex_vm
   gather_facts: false
   vars:
     ansible_python_interpreter: "/usr/bin/env python3"
