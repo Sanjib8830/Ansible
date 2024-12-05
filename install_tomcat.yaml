@@ -1,6 +1,6 @@
 ---
 - name: Install Apache HTTP Server (httpd)
-  hosts: target_servers
+  hosts: pflex_vm
   become: yes  # Enable privilege escalation
 
   tasks:
