@@ -1,6 +1,6 @@
 ---
   - name: Post-installation setup for Ubuntu
-    hosts: plex_vm
+    hosts: pflex_vm
     become: yes
     tasks:
       - name: Ensure the latest packages are installed
