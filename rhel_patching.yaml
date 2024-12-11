@@ -3,19 +3,6 @@
   hosts: rhel8
   become: true
   tasks:
-    - name: Verify subscription status
-      command: subscription-manager status
-      register: subscription_status
-      failed_when: "'Overall Status: Current' not in subscription_status.stdout"
-      ignore_errors: false
-
-    - name: Auto-attach subscription if necessary
-      command: subscription-manager attach --auto
-      when: "'Overall Status: Current' not in subscription_status.stdout"
-      register: attach_result
-      failed_when: "'No available subscriptions to attach' in attach_result.stderr"
-      ignore_errors: true
-
     - name: Ensure required security repositories are enabled
       command: subscription-manager repos --enable=rhel-8-server-security-rpms
       register: repo_result
