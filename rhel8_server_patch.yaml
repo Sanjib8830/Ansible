@@ -1,0 +1,8 @@
+- name: Apply all available updates
+  hosts: rhel8
+  become: true
+  tasks:
+    - name: Update all packages (security, bug fixes, and feature updates)
+      command: dnf update -y
+      register: update_result
+
