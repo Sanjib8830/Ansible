@@ -14,7 +14,4 @@
       register: update_result
       failed_when: "'No packages marked for update' in update_result.stdout"
     
-    - name: Reboot the system if a kernel update was applied
-      reboot:
-        msg: "Rebooting after applying security patches"
-      when: "'kernel' in update_result.stdout"
+
