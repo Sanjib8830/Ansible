@@ -1,0 +1,31 @@
+---
+- name: Apply Security Patches on RHEL Servers
+  hosts: rhel8
+  become: true
+  tasks:
+    - name: Verify subscription status
+      command: subscription-manager status
+      register: subscription_status
+      failed_when: "'Overall Status: Current' not in subscription_status.stdout"
+      ignore_errors: false
+
+    - name: Auto-attach subscription if necessary
+      command: subscription-manager attach --auto
+      when: "'Overall Status: Current' not in subscription_status.stdout"
+      ignore_errors: yes
+
+    - name: Ensure required security repositories are enabled
+      command: subscription-manager repos --enable=rhel-8-server-security-rpms
+      register: repo_result
+      ignore_errors: yes
+      changed_when: "'enabled' in repo_result.stdout"
+
+    - name: Update only security patches
+      command: dnf update --security -y
+      register: update_result
+
+    - name: Reboot the system if a kernel update was applied
+      reboot:
+        msg: "Rebooting after applying security patches"
+      when: "'kernel' in update_result.stdout"
+
