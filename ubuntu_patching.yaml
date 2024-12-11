@@ -1,0 +1,24 @@
+---
+- name: Patch Ubuntu Server
+  hosts: pflex_vm
+  become: yes
+  tasks:
+
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+      register: update_cache_result
+
+    - name: Upgrade all packages to the latest version
+      ansible.builtin.apt:
+        upgrade: dist
+      when: update_cache_result is changed
+
+    - name: Remove unnecessary packages
+      ansible.builtin.apt:
+        autoremove: yes
+
+    - name: Clean up local repository of retrieved package files
+      ansible.builtin.apt:
+        autoclean: yes
+
