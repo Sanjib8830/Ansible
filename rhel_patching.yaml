@@ -3,11 +3,6 @@
   hosts: rhel8
   become: true
   tasks:
-    - name: Ensure required security repositories are enabled
-      command: subscription-manager repos --enable=rhel-8-server-security-rpms
-      register: repo_result
-      ignore_errors: true
-      changed_when: "'enabled' in repo_result.stdout"
 
     - name: Update only security patches
       command: dnf update --security -y
