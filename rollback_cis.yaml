@@ -1,14 +1,8 @@
 ---
-- name: Rollback changes made by the previous playbook
+- name: Rollback changes 
   hosts: rhel8
   become: yes
   tasks:
-    - name: Ensure PasswordAuthentication is enabled
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^PasswordAuthentication'
-        line: 'PasswordAuthentication yes'
-
     - name: Set SELinux to permissive mode
       lineinfile:
         path: /etc/selinux/config
@@ -32,6 +26,7 @@
             path: /etc/ssh/sshd_config
             regexp: '^PermitRootLogin'
             line: 'PermitRootLogin yes'
+          notify: Restart SSH  # Notify the handler
         
         - name: Set SSH protocol to 1
           lineinfile:
@@ -39,10 +34,12 @@
             regexp: '^Protocol'
             line: 'Protocol 1'
         
-        - name: Restart SSH service
-          service:
-            name: sshd
-            state: restarted
+        - name: Enable password authentication in SSH
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^PasswordAuthentication'
+            line: 'PasswordAuthentication yes'
+          notify: Restart SSH  # Notify the handler
 
     - name: Restore file permissions on /etc/passwd
       file:
@@ -85,36 +82,8 @@
         - systemd-cgtop
         - systemd-tty-ask-password-agent
 
-    - name: Ensure SSH root login is disabled (if it was previously enabled)
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^PermitRootLogin'
-        line: 'PermitRootLogin no'
-      notify: Restart SSH
-
-    - name: Ensure SSH protocol is set to 2 (if it was set to 1)
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^Protocol'
-        line: 'Protocol 2'
-      notify: Restart SSH
-
-    - name: Ensure firewall is running
+  handlers:
+    - name: Restart SSH
       service:
-        name: firewalld
-        state: started
-        enabled: yes
-
-    - name: Ensure SSH idle timeout is configured
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^ClientAliveInterval'
-        line: 'ClientAliveInterval 300'
-      notify: Restart SSH
-
-    - name: Ensure SSH login grace time is set to a low value
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^LoginGraceTime'
-        line: 'LoginGraceTime 1m'
-      notify: Restart SSH
+        name: sshd
+        state: restarted
