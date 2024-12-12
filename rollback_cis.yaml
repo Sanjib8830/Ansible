@@ -1,73 +1,64 @@
 ---
-- name: Rollback CIS Benchmarks for RHEL 8
+- name: Rollback changes made by the previous playbook
   hosts: rhel8
   become: yes
   tasks:
-
-    - name: Downgrade all packages (revert updates)
-      dnf:
-        name: '*'
-        state: present
-
-    - name: Disable SELinux enforcement
-      selinux:
-        state: permissive
-
-    - name: Restore SELinux config to permissive
+    - name: Set SELinux to permissive mode
       lineinfile:
         path: /etc/selinux/config
         regexp: '^SELINUX='
         line: 'SELINUX=permissive'
+    
+    - name: Set SELinux to permissive immediately
+      command: setenforce 0
+      ignore_errors: yes
 
-    - name: Stop and disable the firewall
+    - name: Ensure firewalld is stopped and disabled
       service:
         name: firewalld
         state: stopped
         enabled: no
+    
+    - name: Restore SSH configuration (PermitRootLogin yes, Protocol 1, PasswordAuthentication yes)
+      block:
+        - name: Allow root login in SSH
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^PermitRootLogin'
+            line: 'PermitRootLogin yes'
+        
+        - name: Set SSH protocol to 1
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^Protocol'
+            line: 'Protocol 1'
+        
+        - name: Enable password authentication in SSH
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: '^PasswordAuthentication'
+            line: 'PasswordAuthentication yes'
+        
+        - name: Restart SSH service
+          service:
+            name: sshd
+            state: restarted
 
-    - name: Re-enable SSH root login
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^PermitRootLogin'
-        line: 'PermitRootLogin yes'
-      notify: Restart SSH
-
-    - name: Re-enable password authentication for SSH
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^PasswordAuthentication'
-        line: 'PasswordAuthentication yes'
-      notify: Restart SSH
-
-    - name: Remove SSH idle timeout configuration
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^ClientAliveInterval'
-        state: absent
-      notify: Restart SSH
-
-    - name: Remove SSH login grace time configuration
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^LoginGraceTime'
-        state: absent
-      notify: Restart SSH
-
-    - name: Restore default permissions on /etc/passwd
+    - name: Restore file permissions on /etc/passwd
       file:
         path: /etc/passwd
         owner: root
         group: root
         mode: '0644'
 
-    - name: Restore default permissions on /etc/shadow
+    - name: Restore file permissions on /etc/shadow
       file:
         path: /etc/shadow
         owner: root
         group: root
-        mode: '0640'
+        mode: '0600'
 
-    - name: Restore system accounts to default shell
+    - name: Restore default shell for system accounts
       user:
         name: "{{ item }}"
         shell: /bin/bash
@@ -93,10 +84,3 @@
         - systemd-cgls
         - systemd-cgtop
         - systemd-tty-ask-password-agent
-
-  handlers:
-    - name: Restart SSH
-      service:
-        name: sshd
-        state: restarted
-
