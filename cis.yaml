@@ -1,0 +1,108 @@
+---
+- name: Apply CIS Benchmarks for RHEL 8
+  hosts: rhel8
+  become: yes
+  tasks:
+ 
+    - name: Ensure package manager is up to date
+      dnf:
+        name: '*'
+        state: latest
+ 
+    - name: Ensure SELinux is enabled and enforcing
+      command: setenforce 1
+      ignore_errors: yes
+ 
+    - name: Ensure SELinux is set to enforcing in config
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=enforcing'
+ 
+    - name: Ensure firewall is installed and running
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+ 
+    - name: Ensure SSH root login is disabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+ 
+    - name: Ensure SSH protocol is set to 2
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Protocol'
+        line: 'Protocol 2'
+      notify: Restart SSH
+ 
+    - name: Ensure password authentication is disabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: Restart SSH
+ 
+    - name: Ensure SSH idle timeout is configured
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^ClientAliveInterval'
+        line: 'ClientAliveInterval 300'
+      notify: Restart SSH
+ 
+    - name: Ensure SSH login grace time is set to a low value
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LoginGraceTime'
+        line: 'LoginGraceTime 1m'
+      notify: Restart SSH
+ 
+    - name: Ensure permissions on /etc/passwd are configured
+      file:
+        path: /etc/passwd
+        owner: root
+        group: root
+        mode: '0644'
+ 
+    - name: Ensure permissions on /etc/shadow are configured
+      file:
+        path: /etc/shadow
+        owner: root
+        group: root
+        mode: '0600'
+ 
+    - name: Ensure system accounts are non-login
+      user:
+        name: "{{ item }}"
+        shell: /sbin/nologin
+      loop:
+        - bin
+        - daemon
+        - adm
+        - lp
+        - sync
+        - shutdown
+        - halt
+        - mail
+        - operator
+        - games
+        - ftp
+        - nobody
+        - dbus
+        - systemd-timesync
+        - systemd-network
+        - systemd-resolve
+        - systemd-journal-remote
+        - systemd-journal-gateway
+        - systemd-cgls
+        - systemd-cgtop
+        - systemd-tty-ask-password-agent
+ 
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
