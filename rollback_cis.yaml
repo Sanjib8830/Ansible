@@ -1,0 +1,102 @@
+---
+- name: Rollback CIS Benchmarks for RHEL 8
+  hosts: rhel8
+  become: yes
+  tasks:
+
+    - name: Downgrade all packages (revert updates)
+      dnf:
+        name: '*'
+        state: present
+
+    - name: Disable SELinux enforcement
+      selinux:
+        state: permissive
+
+    - name: Restore SELinux config to permissive
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=permissive'
+
+    - name: Stop and disable the firewall
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
+
+    - name: Re-enable SSH root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+      notify: Restart SSH
+
+    - name: Re-enable password authentication for SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+      notify: Restart SSH
+
+    - name: Remove SSH idle timeout configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^ClientAliveInterval'
+        state: absent
+      notify: Restart SSH
+
+    - name: Remove SSH login grace time configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LoginGraceTime'
+        state: absent
+      notify: Restart SSH
+
+    - name: Restore default permissions on /etc/passwd
+      file:
+        path: /etc/passwd
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Restore default permissions on /etc/shadow
+      file:
+        path: /etc/shadow
+        owner: root
+        group: root
+        mode: '0640'
+
+    - name: Restore system accounts to default shell
+      user:
+        name: "{{ item }}"
+        shell: /bin/bash
+      loop:
+        - bin
+        - daemon
+        - adm
+        - lp
+        - sync
+        - shutdown
+        - halt
+        - mail
+        - operator
+        - games
+        - ftp
+        - nobody
+        - dbus
+        - systemd-timesync
+        - systemd-network
+        - systemd-resolve
+        - systemd-journal-remote
+        - systemd-journal-gateway
+        - systemd-cgls
+        - systemd-cgtop
+        - systemd-tty-ask-password-agent
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: sshd
+        state: restarted
+
