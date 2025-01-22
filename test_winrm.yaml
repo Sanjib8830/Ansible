@@ -1,0 +1,7 @@
+---
+- name: Test WinRM connection to Windows machine
+  hosts: windows
+  tasks:
+    - name: Check if Windows is up and running
+      win_ping:
+
