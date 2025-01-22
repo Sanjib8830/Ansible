@@ -1,0 +1,6 @@
+---
+- name: Test Windows Collection
+  hosts: windows
+  tasks:
+    - name: Test connection to Windows host
+      ansible.windows.win_ping:
