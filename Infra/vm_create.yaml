@@ -25,6 +25,10 @@
         hostname: "{{ vcenter_hostname }}"
         username: "{{ vcenter_creds.username }}"
         password: "{{ vcenter_creds.password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        cluster: "{{ vcenter_cluster }}"
+        datastore: "{{ vcenter_datastore }}"
+        
         # ... rest of your VM configuration (datacenter, cluster, etc.) ...
         state: present
 
