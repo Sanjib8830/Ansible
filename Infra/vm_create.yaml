@@ -1,0 +1,38 @@
+---
+- hosts: vcenter
+  gather_facts: false
+  connection: local
+
+  vars:
+    vcenter_hostname: "galaxyvc.galaxyho.com"  # Still define this here
+    datacenter: "Galaxy-DC"
+    cluster: "Pflex-Cluster1"
+    datastore: "Vol1"
+    vm_name: "test_vm"
+    template_vm: "manan test"
+    cpu: 2
+    memory_mb: 4096
+    disk_size_gb: 20
+    net_name: "VM Network"
+
+  tasks:
+    - name: Get vCenter Credentials
+      set_fact:
+        vcenter_creds: "{{ lookup('community.general.credential', 'vCenter Credentials') }}" # Name of your credential in AAP
+
+    - name: Connect to vCenter and create VM
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_creds.username }}"
+        password: "{{ vcenter_creds.password }}"
+        # ... rest of your VM configuration (datacenter, cluster, etc.) ...
+        state: present
+
+    - name: Power on the VM (Optional)
+      community.vmware.vmware_guest_power:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_creds.username }}"
+        password: "{{ vcenter_creds.password }}"
+        name: "{{ vm_name }}"
+        state: poweredon
+      when: power_on | default(false) | bool
