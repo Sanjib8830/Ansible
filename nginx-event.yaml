@@ -1,0 +1,16 @@
+---
+- name: Monitor and Restart Nginx
+  hosts: pflex_vm
+  sources:
+    - name: Monitor Nginx Service
+      ansible.eda.service:
+        service: nginx
+        state: inactive  # Triggers if service is down
+
+  rules:
+    - name: Restart Nginx when it goes down
+      condition: event.service_state == "inactive"
+      action:
+        run_playbook:
+          name: restart-nginx.yml
+
