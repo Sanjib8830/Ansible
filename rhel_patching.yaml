@@ -1,6 +1,6 @@
 ---
 - name: Apply Security Patches on RHEL Servers
-  hosts: rhel8
+  hosts: server
   become: true
   tasks:
 
